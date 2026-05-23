@@ -1,0 +1,38 @@
+{
+  "validUser": {
+    "email": "customer@practicesoftwaretesting.com",
+    "password": "welcome01"
+  },
+  "invalidUser": {
+    "email": "nonexistent@test.com",
+    "password": "wrongPassword123!"
+  },
+  "billingAddress": {
+    "country": "Serbia",
+    "postcode": "11000",
+    "street": "Test Street 1",
+    "city": "Belgrade",
+    "state": "Belgrade"
+  },
+  "bankTransfer": {
+    "bank": "OTP bank",
+    "accountName": "Marko Djordjevic",
+    "accountNumber": "1234567890"
+  },
+  "creditCard": {
+    "valid": {
+      "number": "4111-1111-1111-1111",
+      "expiration": "12/2030",
+      "cvv": "123",
+      "holderName": "Marko Djordjevic"
+    },
+    "invalidNumber": "1234",
+    "expired": {
+      "number": "4111-1111-1111-1111",
+      "expiration": "01/2020",
+      "cvv": "123",
+      "holderName": "Marko Djordjevic"
+    },
+    "invalidCVV": "abc"
+  }
+}

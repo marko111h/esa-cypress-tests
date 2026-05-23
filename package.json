@@ -1,0 +1,22 @@
+{
+  "name": "esa-cypress-tests",
+  "version": "1.0.0",
+  "description": "Cypress E2E test automation for practicesoftwaretesting.com — ESA QA Engineer Task",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "test": "cypress run",
+    "test:user": "cypress run --spec 'cypress/e2e/01-user.cy.js'",
+    "test:search": "cypress run --spec 'cypress/e2e/02-search.cy.js'",
+    "test:cart": "cypress run --spec 'cypress/e2e/03-cart.cy.js'",
+    "test:checkout": "cypress run --spec 'cypress/e2e/04-checkout.cy.js'",
+    "test:chrome": "cypress run --browser chrome",
+    "test:headed": "cypress run --headed"
+  },
+  "keywords": ["cypress", "e2e", "qa", "automation", "practicesoftwaretesting"],
+  "author": "Marko Djordjevic",
+  "license": "MIT",
+  "devDependencies": {
+    "cypress": "^13.15.0"
+  }
+}
