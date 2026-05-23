@@ -1,0 +1,606 @@
+{
+  "info": {
+    "_postman_id": "ae7bb7ce-169c-4509-bf86-3ec6a773d89f",
+    "name": "Products API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48772361"
+  },
+  "item": [
+    {
+      "name": "01 - Login (Setup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has access_token\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"access_token\");\r",
+              "    pm.expect(json.access_token).to.be.a(\"string\");\r",
+              "    pm.expect(json.access_token.length).to.be.greaterThan(20);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Token type is Bearer\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json.token_type).to.eql(\"bearer\");\r",
+              "});\r",
+              "\r",
+              "// Save token to environment variable for next requests\r",
+              "pm.test(\"Save access_token to environment\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.environment.set(\"accessToken\", json.access_token);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"marko.qa.2026@test.com\",\r\n  \"password\": \"TestPass2026!\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Get Categories (Setup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response is an array\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.be.an(\"array\");\r",
+              "    pm.expect(json.length).to.be.greaterThan(0);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Save first SUBCATEGORY id to environment\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    // Find first parent that has subcategories\r",
+              "    const parentWithSubs = json.find(cat => cat.sub_categories && cat.sub_categories.length > 0);\r",
+              "    if (parentWithSubs) {\r",
+              "        const subcategoryId = parentWithSubs.sub_categories[0].id;\r",
+              "        pm.environment.set(\"categoryId\", subcategoryId);\r",
+              "        console.log(\"Saved subcategoryId:\", subcategoryId);\r",
+              "    } else {\r",
+              "        // Fallback to first category\r",
+              "        pm.environment.set(\"categoryId\", json[0].id);\r",
+              "        console.log(\"No subcategories found, using parent:\", json[0].id);\r",
+              "    }\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/categories/tree",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "categories",
+            "tree"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Get Brands (Setup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response is an array\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.be.an(\"array\");\r",
+              "    pm.expect(json.length).to.be.greaterThan(0);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Save first brand_id to environment\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.environment.set(\"brandId\", json[0].id);\r",
+              "    console.log(\"Saved brandId:\", json[0].id);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/brands",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "brands"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05 - POST Product - Customer not authorized",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Customer cannot create product (security test)\", function () {\r",
+              "    // Customer role should NOT be allowed to create products\r",
+              "    // Expected: 401, 403, or 500 (depending on API implementation)\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 500]);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has error message\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"message\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 2000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "\r",
+              "// Log the actual response for documentation\r",
+              "console.log(\"Status:\", pm.response.code);\r",
+              "console.log(\"Body:\", pm.response.text());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"ESA Test Product\",\r\n  \"description\": \"Product created via Postman API test for ESA QA Task\",\r\n  \"price\": 29.99,\r\n  \"category_id\": \"{{categoryId}}\",\r\n  \"brand_id\": \"{{brandId}}\",\r\n  \"product_image_id\": \"{{productImageId}}\",\r\n  \"is_location_offer\": 0,\r\n  \"is_rental\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Get Product Images (Setup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response is an array\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.be.an(\"array\");\r",
+              "    pm.expect(json.length).to.be.greaterThan(0);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Save first product_image_id to environment\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.environment.set(\"productImageId\", json[0].id);\r",
+              "    console.log(\"Saved productImageId:\", json[0].id);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/images",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "images"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "06 - POST Product - No token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 401 Unauthorized\", function () {\r",
+              "    pm.response.to.have.status(401);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has error message\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"message\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"ESA Test Product\",\r\n  \"description\": \"Test without token\",\r\n  \"price\": 29.99,\r\n  \"category_id\": \"{{categoryId}}\",\r\n  \"brand_id\": \"{{brandId}}\",\r\n  \"product_image_id\": \"{{productImageId}}\",\r\n  \"is_location_offer\": 0,\r\n  \"is_rental\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07 - POST Product - Invalid token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 401 Unauthorized\", function () {\r",
+              "    pm.response.to.have.status(401);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "invalid_token_123abc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"ESA Test Product\",\r\n  \"description\": \"Test without token\",\r\n  \"price\": 29.99,\r\n  \"category_id\": \"{{categoryId}}\",\r\n  \"brand_id\": \"{{brandId}}\",\r\n  \"product_image_id\": \"{{productImageId}}\",\r\n  \"is_location_offer\": 0,\r\n  \"is_rental\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "08 - POST Product - Missing name (422)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 422 Unprocessable Content\", function () {\r",
+              "    pm.response.to.have.status(422);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response mentions name field validation error\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"name\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"description\": \"Missing name field\",\r\n  \"price\": 29.99,\r\n  \"category_id\": \"{{categoryId}}\",\r\n  \"brand_id\": \"{{brandId}}\",\r\n  \"product_image_id\": \"{{productImageId}}\",\r\n  \"is_location_offer\": 0,\r\n  \"is_rental\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "09 - POST Product - Missing product_image_id (422)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 422 Unprocessable Content\", function () {\r",
+              "    pm.response.to.have.status(422);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response mentions product_image_id validation error\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"product_image_id\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"ESA Test Product\",\r\n  \"description\": \"Missing image\",\r\n  \"price\": 29.99,\r\n  \"category_id\": \"{{categoryId}}\",\r\n  \"brand_id\": \"{{brandId}}\",\r\n  \"is_location_offer\": 0,\r\n  \"is_rental\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10 - POST Product - Negative price (422)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 422 Unprocessable Content\", function () {\r",
+              "    pm.response.to.have.status(422);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response mentions price validation error\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"price\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"ESA Test Product\",\r\n  \"description\": \"Negative price test\",\r\n  \"price\": -10.00,\r\n  \"category_id\": \"{{categoryId}}\",\r\n  \"brand_id\": \"{{brandId}}\",\r\n  \"product_image_id\": \"{{productImageId}}\",\r\n  \"is_location_offer\": 0,\r\n  \"is_rental\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11 - GET Products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has data array\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"data\");\r",
+              "    pm.expect(json.data).to.be.an(\"array\");\r",
+              "    pm.expect(json.data.length).to.be.greaterThan(0);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Each product has required fields\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    const firstProduct = json.data[0];\r",
+              "    pm.expect(firstProduct).to.have.property(\"id\");\r",
+              "    pm.expect(firstProduct).to.have.property(\"name\");\r",
+              "    pm.expect(firstProduct).to.have.property(\"price\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 2000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

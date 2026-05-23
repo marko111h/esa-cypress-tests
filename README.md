@@ -1,8 +1,19 @@
-# ESA Cypress Test Suite
+# ESA QA Test Assignment
 
-End-to-end automated test suite for [practicesoftwaretesting.com](https://practicesoftwaretesting.com/) built with Cypress 13.
+Test automation and API testing deliverables for [practicesoftwaretesting.com](https://practicesoftwaretesting.com/), submitted as part of the ESA Gaming QA Engineer test task.
 
-This project was created as part of the ESA Gaming QA Engineer test task.
+This repository contains two deliverables:
+
+- **Cypress E2E test suite** — UI automation against the storefront (`cypress/`)
+- **Postman API test collection + Newman runner** — API tests with CLI execution (`postman/`)
+
+Test reports and bug documentation are in `docs/`.
+
+---
+
+## Cypress E2E Test Suite
+
+End-to-end automated test suite built with Cypress 13.
 
 ## Tech stack
 
@@ -98,3 +109,73 @@ Never used: CSS classes or XPath.
 ## Author
 
 Marko Djordjevic — submitted as part of the ESA Gaming QA Engineer test task, 2026.
+
+## Postman API Test Collection
+
+API test suite for `https://api.practicesoftwaretesting.com` runnable from the command line with Newman.
+
+### Tech stack
+
+- Postman — collection format
+- Newman — CLI runner
+- newman-reporter-htmlextra — HTML report generator
+
+### How to run
+
+Prerequisites: Node.js 18+.
+
+Install Newman and the HTML reporter:
+
+    npm install -g newman
+    npm install -g newman-reporter-htmlextra
+
+Run the tests from the project root:
+
+    newman run postman/ESA_Products_API_Tests.postman_collection.json -e postman/ESA_Practice_API.postman_environment.json -r "cli,htmlextra" --reporter-htmlextra-export docs/newman-report.html
+
+The HTML report will be written to `docs/newman-report.html`.
+
+Full Newman documentation is in [`postman/README.md`](postman/README.md).
+
+### Test coverage
+
+The collection contains 11 requests with 29 assertions across four test types:
+
+| Type | Count | Tests |
+|---|---|---|
+| Setup | 4 | Login, Get Categories, Get Brands, Get Product Images |
+| Security | 3 | No token, Invalid token, Customer role unauthorized |
+| Input validation | 3 | Missing name, Missing product_image_id, Negative price |
+| Positive | 1 | GET Products |
+
+### Findings
+
+Testing uncovered **4 API bugs** (full details in [`docs/Bug_Report.pdf`](docs/Bug_Report.pdf)):
+
+- POST `/products` without authentication returns 201 Created instead of 401 Unauthorized
+- POST `/products` with an invalid bearer token returns 201 Created instead of 401 Unauthorized
+- POST `/products` with negative `price` returns 201 Created instead of 422 Unprocessable
+- Customer role authorization check happens after input validation (returns 422 before 403)
+
+The collection is intentionally written against the **correct** expected behavior, so these tests fail by design — they serve as documented bug evidence.
+
+---
+
+## Repository structure
+
+    esa-qa-assignment/
+    ├── cypress/                       — E2E test suite
+    │   ├── e2e/                       — test specs
+    │   ├── pages/                     — Page Object Model
+    │   ├── fixtures/                  — test data
+    │   └── support/                   — commands & config
+    ├── postman/                       — API test collection
+    │   ├── ESA_Products_API_Tests.postman_collection.json
+    │   ├── ESA_Practice_API.postman_environment.json
+    │   └── README.md                  — Newman usage docs
+    ├── docs/                          — reports
+    │   ├── Test_Report.pdf
+    │   ├── Bug_Report.pdf
+    │   └── newman-report.html
+    ├── cypress.config.js
+    └── package.json
