@@ -1,21 +1,50 @@
 // cypress/e2e/04-checkout.cy.js
-// Tests for Checkout & Payment
-// Covers Task 2 area #4.
+// Tests for Checkout & Payment (Guest mode)
 
 import HomePage from "../pages/HomePage";
 import ProductDetailPage from "../pages/ProductDetailPage";
 import CartPage from "../pages/CartPage";
 import CheckoutPage from "../pages/CheckoutPage";
 
+/**
+ * Reusable helper — brings cart to Payment step via guest checkout flow.
+ */
+function goToPaymentStep() {
+  HomePage.visit();
+  HomePage.productNames().first().click();
+  ProductDetailPage.addToCart();
+
+  CartPage.visit();
+  cy.wait(1000);
+  CartPage.proceedToCheckout();
+  cy.wait(2000);
+
+  // Click "Continue as Guest" tab
+  cy.contains("a", "Continue as Guest").click();
+  cy.wait(1500);
+
+  // Fill guest fields
+  CheckoutPage.guestEmail().type("marko.test@example.com", { delay: 50 });
+  CheckoutPage.guestFirstName().type("Marko", { delay: 50 });
+  CheckoutPage.guestLastName().type("Djordjevic", { delay: 50 });
+  CheckoutPage.continueAsGuestButton().click();
+  cy.wait(2000);
+
+  // Click "Proceed to checkout" on guest confirmation step
+  cy.get('[data-test="proceed-2-guest"]').click();
+  cy.wait(2000);
+
+  // Fill billing
+  CheckoutPage.country().select("Serbia");
+  cy.wait(500);
+  CheckoutPage.postcode().type("11000", { delay: 50 });
+  CheckoutPage.houseNumber().type("42", { delay: 50 });
+  cy.wait(1500);
+  CheckoutPage.proceed3Button().click();
+  cy.wait(2000);
+}
+
 describe("Checkout & Payment", () => {
-  let users;
-
-  before(() => {
-    cy.fixture("users").then((data) => {
-      users = data;
-    });
-  });
-
   beforeEach(() => {
     cy.window().then((win) => {
       win.localStorage.clear();
@@ -23,84 +52,111 @@ describe("Checkout & Payment", () => {
     });
   });
 
-  it("TC-38: should block checkout when cart is empty", () => {
+  it("TC-38: should show empty cart message when cart has no items", () => {
     HomePage.visit();
+    HomePage.productNames().first().click();
+    ProductDetailPage.addToCart();
+
     cy.get('[data-test="nav-cart"]').click();
+    cy.wait(1000);
 
-    CartPage.emptyCartMessage().should("be.visible");
-    // 'Proceed to checkout' should not lead anywhere meaningful with empty cart
-    cy.get("body").should("contain.text", "The cart is empty");
-  });
-
-  it("TC-30: should require login when proceeding to checkout", () => {
-    // Add a product to the cart without being logged in
-    HomePage.visit();
-    HomePage.productNames().first().click();
-    ProductDetailPage.addToCart();
-
-    CartPage.visit();
-    CartPage.proceedToCheckout();
-
-    // Sign In step should be shown
-    cy.contains("SIGN IN").should("be.visible");
-    cy.get('[data-test="email"]').should("be.visible");
-    cy.get('[data-test="password"]').should("be.visible");
-  });
-
-  it("TC-31: should complete checkout end-to-end with Bank Transfer", () => {
-    // 1. Add product
-    HomePage.visit();
-    HomePage.productNames().first().click();
-    ProductDetailPage.addToCart();
-
-    // 2. Open cart and proceed
-    CartPage.visit();
-    CartPage.proceedToCheckout();
-
-    // 3. Sign In step — login as existing customer
-    CheckoutPage.signInEmail().type(users.validUser.email);
-    CheckoutPage.signInPassword().type(users.validUser.password, { log: false });
-    CheckoutPage.signInSubmit().click();
-
+    cy.get('a.btn.btn-danger').first().click();
     cy.wait(1500);
 
-    // 4. Proceed to Billing Address step
-    CheckoutPage.proceed2Button().click();
-
-    // 5. Verify billing address is pre-filled or fill it
-    CheckoutPage.street().should("not.have.value", "");
-    CheckoutPage.proceed3Button().click();
-
-    // 6. Payment step — Bank Transfer
-    CheckoutPage.paymentMethod().select("bank-transfer");
-    CheckoutPage.bankName().type(users.bankTransfer || "OTP bank");
-    CheckoutPage.accountName().type("Marko Djordjevic");
-    CheckoutPage.accountNumber().type("1234567890");
-    CheckoutPage.confirmButton().click();
-
-    // 7. Verify success
-    CheckoutPage.paymentSuccessMessage().should("be.visible");
+    CartPage.emptyCartMessage().should("be.visible");
   });
 
-  describe("Payment field validations", () => {
-    beforeEach(() => {
-      // Bring cart to Payment step
-      HomePage.visit();
-      HomePage.productNames().first().click();
-      ProductDetailPage.addToCart();
+  it("TC-30: should show sign-in step when proceeding to checkout", () => {
+    HomePage.visit();
+    HomePage.productNames().first().click();
+    ProductDetailPage.addToCart();
 
-      CartPage.visit();
-      CartPage.proceedToCheckout();
+    CartPage.visit();
+    cy.wait(1000);
+    CartPage.proceedToCheckout();
+    cy.wait(2000);
 
-      CheckoutPage.signInEmail().type(users.validUser.email);
-      CheckoutPage.signInPassword().type(users.validUser.password, { log: false });
-      CheckoutPage.signInSubmit().click();
-      cy.wait(1500);
+    cy.contains("Sign in").should("be.visible");
+    cy.contains("Continue as Guest").should("be.visible");
+  });
 
-      CheckoutPage.proceed2Button().click();
-      CheckoutPage.proceed3Button().click();
+  describe("Payment methods — successful checkout", () => {
+    it("TC-31: should complete checkout end-to-end with Bank Transfer", () => {
+      goToPaymentStep();
+
+      CheckoutPage.paymentMethod().select("bank-transfer");
+      cy.wait(1000);
+      CheckoutPage.bankName().type("OTP bank", { delay: 50 });
+      CheckoutPage.accountName().type("Marko Djordjevic", { delay: 50 });
+      CheckoutPage.accountNumber().type("1234567890", { delay: 50 });
+      CheckoutPage.confirmButton().click();
+      cy.wait(2000);
+
+      CheckoutPage.paymentSuccessMessage().should("be.visible");
+    });
+
+    it("TC-35: should complete checkout with Cash on Delivery", () => {
+      goToPaymentStep();
+
+      CheckoutPage.paymentMethod().select("cash-on-delivery");
+      cy.wait(1000);
+      CheckoutPage.confirmButton().click();
+      cy.wait(2000);
+
+      CheckoutPage.paymentSuccessMessage().should("be.visible");
+    });
+
+    it("TC-36: should complete checkout with Credit Card", () => {
+      goToPaymentStep();
 
       CheckoutPage.paymentMethod().select("credit-card");
+      cy.wait(1000);
+      CheckoutPage.creditCardNumber().type("4111-1111-1111-1111", { delay: 50 });
+      CheckoutPage.expirationDate().type("12/2030", { delay: 50 });
+      CheckoutPage.cvv().type("123", { delay: 50 });
+      CheckoutPage.cardHolder().type("Marko Djordjevic", { delay: 50 });
+      cy.wait(500);
+      CheckoutPage.confirmButton().click();
+      cy.wait(2000);
+
+      CheckoutPage.paymentSuccessMessage().should("be.visible");
+    });
+
+ // Parameterized test for all installment options (3, 6, 9, 12 months)
+    ["3", "6", "9", "12"].forEach((months) => {
+      it(`TC-37-${months}m: should complete checkout with Buy Now Pay Later — ${months} Monthly Installments`, () => {
+        goToPaymentStep();
+
+        CheckoutPage.paymentMethod().select("buy-now-pay-later");
+        cy.wait(1000);
+        CheckoutPage.monthlyInstallments().select(`${months} Monthly Installments`);
+        cy.wait(500);
+        CheckoutPage.confirmButton().click();
+        cy.wait(2000);
+
+        CheckoutPage.paymentSuccessMessage().should("be.visible");
+      });
+    });
+
+    it("TC-39: should complete checkout with Gift Card", () => {
+      goToPaymentStep();
+
+      CheckoutPage.paymentMethod().select("gift-card");
+      cy.wait(1000);
+      CheckoutPage.giftCardNumber().type("GIFT123456789", { delay: 50 });
+      CheckoutPage.validationCode().type("ABC123", { delay: 50 });
+      CheckoutPage.confirmButton().click();
+      cy.wait(2000);
+
+      CheckoutPage.paymentSuccessMessage().should("be.visible");
+    });
+  });
+
+  describe("Payment field validations (Credit Card)", () => {
+    beforeEach(() => {
+      goToPaymentStep();
+      CheckoutPage.paymentMethod().select("credit-card");
+      cy.wait(1000);
     });
 
     it("TC-32: should reject credit card with invalid number (too short)", () => {
@@ -108,10 +164,10 @@ describe("Checkout & Payment", () => {
       CheckoutPage.expirationDate().type("12/2030");
       CheckoutPage.cvv().type("123");
       CheckoutPage.cardHolder().type("Marko Djordjevic");
-      CheckoutPage.confirmButton().click();
+      cy.wait(500);
 
-      // Validation prevents submission — verify by checking that 'Payment was successful' is NOT shown
-      cy.contains("Payment was successful").should("not.exist");
+      CheckoutPage.confirmButton().should("be.disabled");
+      cy.contains("Invalid card number format").should("be.visible");
     });
 
     it("TC-33: should reject credit card with expired date", () => {
@@ -119,21 +175,21 @@ describe("Checkout & Payment", () => {
       CheckoutPage.expirationDate().type("01/2020");
       CheckoutPage.cvv().type("123");
       CheckoutPage.cardHolder().type("Marko Djordjevic");
-      CheckoutPage.confirmButton().click();
+      cy.wait(500);
 
-      cy.contains("Payment was successful").should("not.exist");
+      CheckoutPage.confirmButton().should("be.disabled");
+      cy.contains("Expiration date must be in the future").should("be.visible");
     });
 
     it("TC-34: should reject CVV with letters", () => {
       CheckoutPage.creditCardNumber().type("4111-1111-1111-1111");
       CheckoutPage.expirationDate().type("12/2030");
       CheckoutPage.cvv().type("abc");
-      // CVV input typically restricts non-numeric — verify value is empty or only digits remained
-      CheckoutPage.cvv()
-        .invoke("val")
-        .then((val) => {
-          expect(/^\d*$/.test(val), `CVV should only contain digits, got "${val}"`).to.be.true;
-        });
+      CheckoutPage.cardHolder().type("Marko Djordjevic");
+      cy.wait(500);
+
+      CheckoutPage.confirmButton().should("be.disabled");
+      cy.contains("CVV must be 3 or 4 digits").should("be.visible");
     });
   });
 });

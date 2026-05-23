@@ -1,19 +1,19 @@
 // cypress/pages/CheckoutPage.js
-// Covers Sign In step, Billing Address step, and Payment step.
+// Covers Guest Checkout flow: Sign In step → Billing → Payment
 
 class CheckoutPage {
-  // ----- Sign In step -----
-  signInEmail() {
-    return cy.get('[data-test="email"]');
+  // ----- Sign In step (Guest mode) -----
+  guestEmail() {
+    return cy.get('[data-test="guest-email"]');
   }
-  signInPassword() {
-    return cy.get('[data-test="password"]');
+  guestFirstName() {
+    return cy.get('[data-test="guest-first-name"]');
   }
-  signInSubmit() {
-    return cy.get('[data-test="login-submit"]');
+  guestLastName() {
+    return cy.get('[data-test="guest-last-name"]');
   }
-  proceed2Button() {
-    return cy.get('[data-test="proceed-2"]');
+  continueAsGuestButton() {
+    return cy.get('[data-test="guest-submit"]');
   }
 
   // ----- Billing Address step -----
@@ -32,6 +32,9 @@ class CheckoutPage {
   postcode() {
     return cy.get('[data-test="postal_code"]');
   }
+  houseNumber() {
+    return cy.get('[data-test="house_number"]');
+  }
   proceed3Button() {
     return cy.get('[data-test="proceed-3"]');
   }
@@ -40,6 +43,8 @@ class CheckoutPage {
   paymentMethod() {
     return cy.get('[data-test="payment-method"]');
   }
+
+  // Bank Transfer fields
   bankName() {
     return cy.get('[data-test="bank_name"]');
   }
@@ -49,6 +54,8 @@ class CheckoutPage {
   accountNumber() {
     return cy.get('[data-test="account_number"]');
   }
+
+  // Credit Card fields
   creditCardNumber() {
     return cy.get('[data-test="credit_card_number"]');
   }
@@ -61,29 +68,26 @@ class CheckoutPage {
   cardHolder() {
     return cy.get('[data-test="card_holder_name"]');
   }
+
+  // Buy Now Pay Later fields
+  monthlyInstallments() {
+    return cy.get('[data-test="monthly_installments"]');
+  }
+
+  // Gift Card fields
+  giftCardNumber() {
+    return cy.get('[data-test="gift_card_number"]');
+  }
+  validationCode() {
+    return cy.get('[data-test="validation_code"]');
+  }
+
+  // Confirm & success
   confirmButton() {
     return cy.get('[data-test="finish"]');
   }
   paymentSuccessMessage() {
     return cy.contains("Payment was successful");
-  }
-
-  fillBillingAddress({ street, city, state, country, postcode }) {
-    if (street) this.street().clear().type(street);
-    if (city) this.city().clear().type(city);
-    if (state) this.state().clear().type(state);
-    if (country) this.country().select(country);
-    if (postcode) this.postcode().clear().type(postcode);
-    return this;
-  }
-
-  payWithBankTransfer({ bank, accountName, accountNumber }) {
-    this.paymentMethod().select("bank-transfer");
-    this.bankName().type(bank);
-    this.accountName().type(accountName);
-    this.accountNumber().type(accountNumber);
-    this.confirmButton().click();
-    return this;
   }
 }
 

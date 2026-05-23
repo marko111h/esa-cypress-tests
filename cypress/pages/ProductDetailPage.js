@@ -14,7 +14,7 @@ class ProductDetailPage {
   }
 
   addToCartButton() {
-    return cy.get('[data-test="add-to-cart-button"]');
+    return cy.get('[data-test="add-to-cart"]');
   }
 
   toast() {
@@ -28,7 +28,6 @@ class ProductDetailPage {
 
   addToCart() {
     this.addToCartButton().click();
-    // Confirm the cart counter updated
     cy.get('[data-test="cart-quantity"]', { timeout: 10000 }).should("be.visible");
     return this;
   }

@@ -18,7 +18,6 @@ module.exports = defineConfig({
     },
   },
   env: {
-    // Default test user (provided by practicesoftwaretesting.com)
     CUSTOMER_EMAIL: "customer@practicesoftwaretesting.com",
     CUSTOMER_PASSWORD: "welcome01",
   },

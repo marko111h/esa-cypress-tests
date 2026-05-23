@@ -17,14 +17,14 @@ describe("Search & Filter", () => {
 
     it("TC-14: should be case-insensitive (HAMMER vs hammer)", () => {
       HomePage.search("hammer");
-      cy.wait(500);
+      cy.wait(1000);
       HomePage.productNames()
         .then(($lowerResults) => $lowerResults.length)
         .as("lowerCount");
 
       HomePage.searchResetButton().click();
       HomePage.search("HAMMER");
-      cy.wait(500);
+      cy.wait(1000);
 
       cy.get("@lowerCount").then((lowerCount) => {
         HomePage.productNames().should("have.length", lowerCount);
@@ -51,7 +51,7 @@ describe("Search & Filter", () => {
   describe("Filter & Sort", () => {
     it("TC-16: should sort A → Z alphabetically", () => {
       HomePage.sortBy("name,asc");
-      cy.wait(500);
+      cy.wait(1000);
 
       HomePage.productNames().then(($names) => {
         const names = [...$names].map((el) => el.textContent.trim());
@@ -62,7 +62,7 @@ describe("Search & Filter", () => {
 
     it("TC-17: should sort by Price (High → Low)", () => {
       HomePage.sortBy("price,desc");
-      cy.wait(500);
+      cy.wait(1000);
 
       HomePage.productPrices().then(($prices) => {
         const prices = [...$prices].map((el) =>
@@ -75,7 +75,7 @@ describe("Search & Filter", () => {
 
     it("TC-19: should filter products by category 'Hammer'", () => {
       HomePage.filterByCategory("Hammer");
-      cy.wait(500);
+      cy.wait(1000);
 
       HomePage.productNames().each(($name) => {
         // All names in the Hammer category contain 'Hammer' (case-insensitive)
@@ -86,7 +86,7 @@ describe("Search & Filter", () => {
     it("TC-20: should combine search + category filter", () => {
       HomePage.filterByCategory("Hammer");
       HomePage.search("claw");
-      cy.wait(500);
+      cy.wait(1000);
 
       HomePage.productNames().each(($name) => {
         expect($name.text().toLowerCase()).to.contain("claw");
@@ -98,10 +98,10 @@ describe("Search & Filter", () => {
     it("should reset pagination to page 1 when sort order is changed", () => {
       // Documents BUG-003. Currently the user remains on the page they were on.
       cy.visit("/?page=3");
-      cy.wait(800);
+      cy.wait(1000);
 
       HomePage.sortBy("price,desc");
-      cy.wait(800);
+      cy.wait(1000);
 
       // Expected behaviour: pagination resets to page 1
       // Actual behaviour (current): user stays on page 3

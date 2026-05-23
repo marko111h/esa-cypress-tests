@@ -7,11 +7,12 @@ class CartPage {
   }
 
   cartItems() {
-    return cy.get('[data-test="cart-item"]');
+    // Each row in the cart table is a <tr> inside the cart <tbody>
+    return cy.get('app-cart tbody tr');
   }
 
   itemNameAt(index) {
-    return cy.get('[data-test="product-title"]').eq(index);
+    return cy.get('app-cart tbody tr').eq(index).find('td.col-md-4');
   }
 
   itemQuantityAt(index) {
@@ -19,15 +20,18 @@ class CartPage {
   }
 
   itemLinePriceAt(index) {
-    return cy.get('[data-test="line-price"]').eq(index);
+    // Line total is the last td.col-md-2 in the row (the "Total" column)
+    return cy.get('app-cart tbody tr').eq(index).find('td.col-md-2').last();
   }
 
   removeButtonAt(index) {
-    return cy.get('[data-test="product-delete"]').eq(index);
+    // The remove (X) button is an <a> with class "btn-danger" inside each row
+    return cy.get('a.btn.btn-danger').eq(index);
   }
 
   cartTotal() {
-    return cy.get('[data-test="cart-total"]');
+    // Total appears as $XX.XX in the cart footer
+    return cy.contains("Total").parent().find("td").last();
   }
 
   proceedToCheckoutButton() {
